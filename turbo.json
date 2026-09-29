@@ -1,0 +1,50 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "globalDependencies": ["tsconfig.base.json"],
+  "globalEnv": ["NODE_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "AUTH_API_URL",
+        "AUTH_APP_URL",
+        "AUTH_SESSION_URL",
+        "DEFAULT_RETURN_URL",
+        "ALLOWED_RETURN_ORIGINS",
+        "APP_VERSION",
+        "SHELL_URL",
+        "PUBLIC_APP_URL",
+        "CUSTOMER360_API_URL",
+        "QUEUE_API_URL",
+        "PRETOPOST_API_URL",
+        "QUEUE_SUMMARY_URL",
+        "CUSTOMER360_URL",
+        "QUEUE_URL",
+        "PRETOPOST_URL"
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^typecheck"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

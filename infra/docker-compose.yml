@@ -1,0 +1,135 @@
+# Local production-shaped stack: five app images behind one NGINX edge.
+#
+#   docker compose -f infra/docker-compose.yml up --build
+#   open http://localhost:8080
+#
+# The Go services are deliberately absent - they live in a separate repository.
+# Each application degrades to an explicit "service unavailable" state until its
+# backend answers; getting past the login screen needs the auth service on :8080.
+#
+# Authoritative routing lives in the Next.js configs, not here: because each
+# application declares its own basePath, http://localhost:3004/auth/login behaves
+# the same in `pnpm dev` and behind NGINX.
+#
+# In production every application is a same-origin sub-path behind NGINX, yet
+# PUBLIC_APP_URL is still an absolute origin: post-login return targets are
+# absolute by design, since a relative one would resolve against the auth
+# application's own basePath. It must also appear in ALLOWED_RETURN_ORIGINS.
+
+name: xlsmart-mfe
+
+services:
+  # Identity. The only application that reaches the auth service, and the only
+  # one that issues or clears the session cookie.
+  auth:
+    build:
+      context: ..
+      dockerfile: apps/auth/Dockerfile
+    image: meteor/auth:local
+    container_name: auth-app # the hostname the other applications resolve
+    environment:
+      NODE_ENV: production
+      AUTH_API_URL: http://host.docker.internal:8080
+      DEFAULT_RETURN_URL: http://localhost:8080/
+      ALLOWED_RETURN_ORIGINS: http://localhost:8080
+    ports:
+      - "3004:3004"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3004/auth/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  shell:
+    build:
+      context: ..
+      dockerfile: apps/shell/Dockerfile
+    image: meteor/shell:local
+    environment:
+      NODE_ENV: production
+      AUTH_APP_URL: /auth
+      AUTH_SESSION_URL: http://auth-app:3004/auth/api/session
+      PUBLIC_APP_URL: http://localhost:8080
+      QUEUE_SUMMARY_URL: http://queue:3002/queue/api/summary
+      CUSTOMER360_URL: /customer360
+      QUEUE_URL: /queue
+      PRETOPOST_URL: /pretopost
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  customer360:
+    build:
+      context: ..
+      dockerfile: apps/customer360/Dockerfile
+    image: meteor/customer360:local
+    environment:
+      NODE_ENV: production
+      AUTH_APP_URL: /auth
+      PUBLIC_APP_URL: http://localhost:8080
+      SHELL_URL: ""
+      CUSTOMER360_API_URL: http://host.docker.internal:8081
+    ports:
+      - "3001:3001"
+    depends_on:
+      - auth
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  queue:
+    build:
+      context: ..
+      dockerfile: apps/queue/Dockerfile
+    image: meteor/queue:local
+    environment:
+      NODE_ENV: production
+      AUTH_APP_URL: /auth
+      PUBLIC_APP_URL: http://localhost:8080
+      SHELL_URL: ""
+      QUEUE_API_URL: http://host.docker.internal:8082
+    ports:
+      - "3002:3002"
+    depends_on:
+      - auth
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  pretopost:
+    build:
+      context: ..
+      dockerfile: apps/pretopost/Dockerfile
+    image: meteor/pretopost:local
+    environment:
+      NODE_ENV: production
+      AUTH_APP_URL: /auth
+      PUBLIC_APP_URL: http://localhost:8080
+      SHELL_URL: ""
+      PRETOPOST_API_URL: http://host.docker.internal:8083
+    ports:
+      - "3003:3003"
+    depends_on:
+      - auth
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nginx:
+    image: nginx:1.29-alpine
+    depends_on:
+      - auth
+      - shell
+      - customer360
+      - queue
+      - pretopost
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro

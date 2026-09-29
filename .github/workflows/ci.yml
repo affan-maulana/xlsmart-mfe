@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Verify only what the change can affect. Turborepo's dependency graph
+  # decides: touch packages/ui and all four applications rebuild; touch apps/queue
+  # and only queue (plus anything depending on it) runs.
+  # -----------------------------------------------------------------------
+  verify:
+    name: Lint, typecheck, test, build (affected)
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.affected.outputs.apps }}
+      has-apps: ${{ steps.affected.outputs.has-apps }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enforce microfrontend architecture rules
+        run: pnpm check:architecture
+
+      - name: Resolve the base revision
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=HEAD^" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine affected applications
+        id: affected
+        run: |
+          pnpm turbo run build --dry=json --filter="...[${{ steps.base.outputs.ref }}]" \
+            > /tmp/affected.json
+
+          # GITHUB_OUTPUT is a file path exported into the step environment;
+          # appending here sets outputs consumed by the images job.
+          node -e '
+            const fs = require("node:fs");
+            const tasks = require("/tmp/affected.json").tasks ?? [];
+            const apps = [...new Set(
+              tasks
+                .map((task) => task.package)
+                .filter((id) => id?.startsWith("@app/"))
+                .map((id) => id.slice("@app/".length)),
+            )];
+
+            fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              `apps=${JSON.stringify(apps)}\nhas-apps=${apps.length > 0 ? "true" : "false"}\n`,
+            );
+            console.log(
+              apps.length
+                ? `Affected applications: ${apps.join(", ")}`
+                : "No application affected by this change",
+            );
+          '
+
+      - name: Cache Turborepo artifacts
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
+
+      - name: Lint
+        run: pnpm turbo run lint --filter="...[${{ steps.base.outputs.ref }}]"
+
+      - name: Typecheck
+        run: pnpm turbo run typecheck --filter="...[${{ steps.base.outputs.ref }}]"
+
+      - name: Test
+        run: pnpm turbo run test --filter="...[${{ steps.base.outputs.ref }}]"
+
+      - name: Build
+        run: pnpm turbo run build --filter="...[${{ steps.base.outputs.ref }}]"
+
+  # -----------------------------------------------------------------------
+  # One image per application, built only for applications that changed.
+  # -----------------------------------------------------------------------
+  images:
+    name: Image (${{ matrix.app }})
+    needs: verify
+    if: github.event_name == 'push' && needs.verify.outputs.has-apps == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.verify.outputs.apps) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.app }} image
+        run: |
+          docker build \
+            -f apps/${{ matrix.app }}/Dockerfile \
+            --build-arg APP_VERSION=${{ github.sha }} \
+            -t ghcr.io/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }} \
+            .
+
+      - name: Verify the image serves its health probe
+        run: |
+          port=$(node -e '
+            const ports = { shell: 3000, customer360: 3001, queue: 3002, pretopost: 3003 };
+            process.stdout.write(String(ports["${{ matrix.app }}"]));
+          ')
+          base_path="${{ matrix.app }}"
+          [ "$base_path" = "shell" ] && base_path=""
+
+          docker run -d --rm --name probe-${{ matrix.app }} \
+            -p ${port}:${port} \
+            ghcr.io/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }}
+
+          for attempt in $(seq 1 20); do
+            if docker exec probe-${{ matrix.app }} wget -q -O - \
+              "http://127.0.0.1:${port}${base_path}/api/health"; then
+              echo; echo "Image ${{ matrix.app }} is healthy"; exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs probe-${{ matrix.app }}
+          exit 1
+
+      # Pushing to a registry is a release decision: wire this step to your
+      # registry credentials before enabling it.
+      - name: Push image
+        if: false
+        run: echo "Configure registry credentials, then enable this step."

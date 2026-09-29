@@ -1,0 +1,38 @@
+{
+  "name": "xlsmart-mfe",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Enterprise domain-oriented microfrontend platform: shell + Customer360 + Queue + PreToPost",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:shell": "turbo run dev --filter=@app/shell",
+    "dev:auth": "turbo run dev --filter=@app/auth",
+    "dev:customer360": "turbo run dev --filter=@app/customer360",
+    "dev:queue": "turbo run dev --filter=@app/queue",
+    "dev:pretopost": "turbo run dev --filter=@app/pretopost",
+    "build": "turbo run build",
+    "build:affected": "turbo run build --filter=...[origin/main]",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check": "pnpm check:architecture && turbo run lint typecheck test build",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,yaml,yml,mjs}\"",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "docker:build": "docker compose -f infra/docker-compose.yml build",
+    "docker:up": "docker compose -f infra/docker-compose.yml up -d"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "prettier": "^3.6.2",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  }
+}
