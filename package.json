@@ -2,7 +2,7 @@
   "name": "xlsmart-mfe",
   "private": true,
   "version": "0.1.0",
-  "description": "Enterprise domain-oriented microfrontend platform: shell + Customer360 + Queue + PreToPost",
+  "description": "Enterprise domain-oriented microfrontend platform: shell + Customer360 + Queue + Subscription Management",
   "packageManager": "pnpm@12.4.1",
   "engines": {
     "node": ">=20.11.0",
@@ -14,7 +14,7 @@
     "dev:auth": "turbo run dev --filter=@app/auth",
     "dev:customer360": "turbo run dev --filter=@app/customer360",
     "dev:queue": "turbo run dev --filter=@app/queue",
-    "dev:pretopost": "turbo run dev --filter=@app/pretopost",
+    "dev:subscription-management": "turbo run dev --filter=@app/subscription-management",
     "build": "turbo run build",
     "build:affected": "turbo run build --filter=...[origin/main]",
     "lint": "turbo run lint",

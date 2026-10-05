@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { getNavigation, loginUrlFor, logoutUrlFor } from "@/lib/config";
+import { getNavigation } from "@repo/auth";
+
+import { loginUrlFor, logoutUrlFor } from "@/lib/config";
 
 /**
  * The shell no longer owns sign-in. What it must still get right is where it
@@ -21,13 +23,13 @@ describe("shell links to the auth application", () => {
     expect(url.searchParams.get("next")).toBe("https://app.example.test/");
   });
 
-  it("navigates by URL only, to this platform's own origins", () => {
+  it("navigates by URL only, to this platform's own origins", async () => {
     // The invariant that keeps the shell from becoming a super application: a
     // navigation target is either a same-origin path or this platform's own
     // origin (absolute, as it must be when apps run on separate ports).
     const platformOrigin = new URL(process.env.PUBLIC_APP_URL ?? "").origin;
 
-    for (const item of getNavigation()) {
+    for (const item of await getNavigation()) {
       if (item.href.startsWith("/")) continue;
 
       const target = new URL(item.href);

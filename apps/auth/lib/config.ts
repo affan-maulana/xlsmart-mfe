@@ -44,7 +44,7 @@ export function allowedReturnOrigins(): ReadonlySet<string> {
 
 /**
  * One cookie for the whole platform. Path=/ plus the shared parent domain is
- * what lets /customer360, /queue and /pretopost reuse a single sign-in.
+ * what lets /customer360, /queue and /subscription-management reuse a single sign-in.
  *
  * Attributes are a cross-application contract: the domain applications read this
  * cookie name to build their Bearer header, and each declares the constant

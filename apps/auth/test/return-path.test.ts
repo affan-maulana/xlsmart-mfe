@@ -18,8 +18,8 @@ describe("resolveReturnTarget", () => {
     expect(resolveReturnTarget(["http://localhost:3001/customer360"])).toBe(
       "http://localhost:3001/customer360",
     );
-    expect(resolveReturnTarget("  http://localhost:3003/pretopost  ")).toBe(
-      "http://localhost:3003/pretopost",
+    expect(resolveReturnTarget("  http://localhost:3003/subscription-management  ")).toBe(
+      "http://localhost:3003/subscription-management",
     );
   });
 

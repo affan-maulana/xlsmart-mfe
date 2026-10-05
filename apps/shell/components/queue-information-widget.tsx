@@ -23,7 +23,11 @@ export async function QueueInformationWidget() {
 
       {result.ok ? (
         <dl className="grid grid-cols-2 gap-2">
-          <Metric label="Waiting" value={result.summary.waitingCustomers} icon={UsersIcon} />
+          <Metric
+            label="Waiting"
+            value={result.summary.waitingCustomers}
+            icon={UsersIcon}
+          />
           <Metric
             label="Longest wait"
             value={result.summary.longestWaitMinutes}
@@ -61,7 +65,9 @@ function Metric({
       </dt>
       <dd className="mt-0.5 text-lg font-semibold tabular-nums">
         {value}
-        {suffix ? <span className="text-muted-foreground ml-0.5 text-xs">{suffix}</span> : null}
+        {suffix ? (
+          <span className="text-muted-foreground ml-0.5 text-xs">{suffix}</span>
+        ) : null}
       </dd>
     </div>
   );

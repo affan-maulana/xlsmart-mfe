@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
 
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireSession } from "@repo/auth";
+
+import { loginUrl } from "@/lib/config";
 import { DomainHeader } from "@/components/domain-header";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const user = await requireSessionUser();
+  const user = await requireSession({ loginUrl: loginUrl() });
 
   return (
     <div className="flex min-h-screen flex-1 flex-col">

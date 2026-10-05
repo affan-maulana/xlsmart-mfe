@@ -5,7 +5,11 @@
  * Import this AFTER "tailwindcss" in each app's globals.css so that
  * shell + Customer360 + Queue + PreToPost render one consistent design system.
  */
-@source "./components";
+@source "./organisms";
+@source "./ui";
+@source "./molecules";
+
+@plugin "tailwindcss-animate";
 
 :root {
   --radius: 0.625rem;
@@ -52,6 +56,18 @@
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-accent: oklch(0.945 0.02 260);
   --sidebar-accent-foreground: oklch(0.42 0.16 265);
+
+  --overlay: oklch(0.141 0.005 285.823);
+
+  --ink-muted: oklch(0.552 0.016 285.938);
+  --ink-soft: oklch(0.141 0.005 285.823 / 60%);
+  --faint: oklch(0.985 0 0);
+  --border-strong: oklch(0.82 0.004 286.32);
+
+  --success-subtle: oklch(0.627 0.17 149.402 / 10%);
+  --info-subtle: oklch(0.6 0.15 210 / 10%);
+  --warning-subtle: oklch(0.75 0.183 70.08 / 10%);
+  --destructive-subtle: oklch(0.577 0.245 27.325 / 10%);
 }
 
 .dark {
@@ -97,6 +113,18 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-accent: oklch(0.3 0.05 265);
   --sidebar-accent-foreground: oklch(0.9 0.03 265);
+
+  --overlay: oklch(0 0 0);
+
+  --ink-muted: oklch(0.705 0.015 286.062);
+  --ink-soft: oklch(0.985 0 0 / 60%);
+  --faint: oklch(0.21 0.006 285.885);
+  --border-strong: oklch(1 0 0 / 20%);
+
+  --success-subtle: oklch(0.72 0.19 149.402 / 15%);
+  --info-subtle: oklch(0.72 0.14 210 / 15%);
+  --warning-subtle: oklch(0.82 0.17 70.08 / 15%);
+  --destructive-subtle: oklch(0.704 0.191 22.216 / 15%);
 }
 
 @theme inline {
@@ -104,6 +132,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: var(--radius);
+  --radius-pill: 9999px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -136,6 +166,71 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+
+  --color-overlay: var(--overlay);
+
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-soft: var(--ink-soft);
+  --color-faint: var(--faint);
+  --color-border-strong: var(--border-strong);
+
+  --color-success-subtle: var(--success-subtle);
+  --color-info-subtle: var(--info-subtle);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-destructive-subtle: var(--destructive-subtle);
+
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
+  --shadow-card: 0 1px 3px 0 oklch(0 0 0 / 10%), 0 1px 2px -1px oklch(0 0 0 / 10%);
+  --shadow-overlay: 0 10px 50px -12px oklch(0 0 0 / 25%);
+
+  --size-icon-sm: 14px;
+  --size-icon: 18px;
+  --size-icon-lg: 24px;
+
+  --animate-overlay-in: overlay-in 0.2s ease-out;
+  --animate-overlay-out: overlay-out 0.15s ease-in;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
 }
 
 @layer base {
@@ -152,4 +247,19 @@
   :where(:not(:has([class*=" font-"], [class^="font-"]))) {
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+@utility size-icon-sm {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+
+@utility size-icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+@utility size-icon-lg {
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
 }

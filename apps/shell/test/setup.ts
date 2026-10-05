@@ -13,4 +13,4 @@ process.env.PUBLIC_APP_URL ??= "https://app.example.test";
 process.env.QUEUE_SUMMARY_URL ??= "http://queue:3002/queue/api/summary";
 process.env.CUSTOMER360_URL ??= "https://app.example.test/customer360";
 process.env.QUEUE_URL ??= "https://app.example.test/queue";
-process.env.PRETOPOST_URL ??= "https://app.example.test/pretopost";
+process.env.SUBSCRIPTION_MANAGEMENT_URL ??= "https://app.example.test/subscription-management";

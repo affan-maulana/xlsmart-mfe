@@ -1,31 +1,49 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+
 export { cn } from "./lib/utils";
 
-export { Button, buttonVariants, type ButtonProps } from "./components/button";
-export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
+export type { NavChildItem, NavIconName, NavItem } from "@repo/auth";
+
+export type { AgentInfo, AgentQueueInfo } from "./lib/types";
+export { AppChrome, type AppChromeProps } from "./organisms/app-chrome";
+export { AppHeader, type AppHeaderProps } from "./organisms/app-header";
+export { AppSidebar, type AppSidebarProps } from "./organisms/app-sidebar";
+export { QueueBar, type QueueBarProps } from "./molecules/queue-bar";
+
+export { Button, buttonVariants, type ButtonProps } from "./ui/button";
+export { Badge, badgeVariants, type BadgeProps } from "./ui/badge";
 export {
   StatusBadge,
   type StatusBadgeProps,
   type StatusTone,
-} from "./components/status-badge";
+} from "./ui/status-badge";
 
 export {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./components/card";
+} from "./ui/card";
 
-export { Input } from "./components/input";
-export { Textarea } from "./components/textarea";
-export { Label } from "./components/label";
-export { Field } from "./components/field";
+export { Input } from "./ui/input";
+export { Textarea } from "./ui/textarea";
+export { Label } from "./ui/label";
+export { Field } from "./ui/field";
 
-export { PageHeader, type PageHeaderProps } from "./components/page-header";
+export { PageHeader, type PageHeaderProps } from "./ui/page-header";
 
-export { DataTable, type DataTableColumn, type DataTableProps } from "./components/data-table";
+export {
+  DataTable,
+  type DataTableColumn,
+  type DataTableProps,
+} from "./ui/data-table";
 export {
   Table,
   TableBody,
@@ -35,9 +53,9 @@ export {
   TableHead,
   TableHeader,
   TableRow,
-} from "./components/table";
+} from "./ui/table";
 
-export { Modal, type ModalProps } from "./components/modal";
+export { Modal, type ModalProps } from "./ui/modal";
 export {
   Dialog,
   DialogClose,
@@ -49,11 +67,12 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-} from "./components/dialog";
+} from "./ui/dialog";
 
-export { Separator } from "./components/separator";
-export { Skeleton } from "./components/skeleton";
-
+export { Separator } from "./ui/separator";
+export { Skeleton } from "./ui/skeleton";
+export { Checkbox } from "./ui/checkbox";
+export { BRAND_LOGO_SRC, BRAND_AVATAR_SRC } from "./brand";
 export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -70,13 +89,25 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "./components/dropdown-menu";
+} from "./ui/dropdown-menu";
 
 export {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "./components/tooltip";
+} from "./ui/tooltip";
 
-export { Avatar, AvatarFallback, AvatarImage } from "./components/avatar";
+export { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+export { Breadcrumb, type BreadcrumbProps } from "./ui/breadcrumb";
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };

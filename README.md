@@ -12,7 +12,7 @@ https://app.company.com            -> shell          (platform: layout, nav, use
 https://app.company.com/auth       -> auth           (identity: sign-in, session contract)
 https://app.company.com/customer360 -> customer360   (customer domain)
 https://app.company.com/queue       -> queue         (queue domain)
-https://app.company.com/pretopost   -> pretopost     (prepaid/postpaid domain)
+https://app.company.com/subscription-management   -> subscription-management     (prepaid/postpaid domain)
 ```
 
 ## Quick start
@@ -21,11 +21,11 @@ https://app.company.com/pretopost   -> pretopost     (prepaid/postpaid domain)
 pnpm install
 
 # Each application reads its own .env; examples are committed.
-for app in auth shell customer360 queue pretopost; do
+for app in auth shell customer360 queue subscription-management; do
   cp "apps/$app/.env.example" "apps/$app/.env.local"
 done
 
-pnpm dev            # all five: auth :3004, shell :3000, customer360 :3001, queue :3002, pretopost :3003
+pnpm dev            # all five: auth :3004, shell :3000, customer360 :3001, queue :3002, subscription-management :3003
 pnpm dev:queue      # one application at a time (Turborepo filter, no custom orchestration)
 ```
 
@@ -36,6 +36,37 @@ explicit "service unavailable" state instead of a stack trace. Sign-in needs the
 auth service, so point `AUTH_API_URL` (in `apps/auth/.env.local`) at a running
 instance to go further.
 
+### Same-origin access via NGINX (recommended for integration testing)
+
+In production all five apps sit behind one domain. To replicate that locally:
+
+```bash
+# 1. Add the dev hostname (one-time)
+echo "127.0.0.1 ucs.xlsmart.local" | sudo tee -a /etc/hosts
+
+# 2. Start all apps
+pnpm dev
+
+# 3. In another terminal, start NGINX as a reverse proxy
+sudo nginx -c /Users/affan/Documents/XLsmart/Meteor/Frontend/mfe/infra/nginx/dev.conf
+```
+
+Then open <http://ucs.xlsmart.local> — all routes share the same origin:
+
+| Path                                        | Application             |
+| ------------------------------------------- | ----------------------- |
+| `ucs.xlsmart.local/`                        | Shell                   |
+| `ucs.xlsmart.local/auth/login`              | Auth (sign-in)          |
+| `ucs.xlsmart.local/customer360`             | Customer360             |
+| `ucs.xlsmart.local/queue`                   | Queue                   |
+| `ucs.xlsmart.local/subscription-management` | Subscription Management |
+
+Stop NGINX when done: `sudo nginx -s stop`.
+
+> **Note:** `pnpm dev` alone runs each app on a separate port (`:3000`, `:3001`, etc.).
+> This is fine for day-to-day work on a single app. Use the NGINX setup above when
+> you need same-origin behavior to match production.
+
 ## Layout
 
 ```text
@@ -44,7 +75,7 @@ apps/
   shell/          platform application: layout, nav, user info, queue widget
   customer360/    search, profile, interactions
   queue/          lifecycle, status, tickets, published summary API
-  pretopost/      migration and conversion workflows
+  subscription-management/      migration and conversion workflows
 packages/
   ui/             presentational primitives only (the one permitted shared package)
 infra/
@@ -56,13 +87,13 @@ scripts/
 
 ### Who owns what
 
-| Application  | Owns                                                              | Must never contain                     |
-| ------------ | ----------------------------------------------------------------- | -------------------------------------- |
-| auth         | sign-in, sign-out, the session cookie, `GET /auth/api/session`     | any domain data or workflow           |
-| shell        | layout, sidebar, header, user info, queue info **widget**           | any domain workflow, any credential    |
-| customer360  | customer search, profile, interactions, its own BFF                 | queue or billing workflow             |
-| queue        | queue lifecycle, rules, tickets, `GET /queue/api/summary`           | customer master data                  |
-| pretopost    | prepaid/postpaid migration + conversion workflows                   | queue operations                      |
+| Application             | Owns                                                           | Must never contain                  |
+| ----------------------- | -------------------------------------------------------------- | ----------------------------------- |
+| auth                    | sign-in, sign-out, the session cookie, `GET /auth/api/session` | any domain data or workflow         |
+| shell                   | layout, sidebar, header, user info, queue info **widget**      | any domain workflow, any credential |
+| customer360             | customer search, profile, interactions, its own BFF            | queue or billing workflow           |
+| queue                   | queue lifecycle, rules, tickets, `GET /queue/api/summary`      | customer master data                |
+| subscription-management | prepaid/postpaid migration + conversion workflows              | queue operations                    |
 
 Two contracts carry data across application boundaries, both over HTTP: the shell
 renders the queue information widget from Queue's published summary
@@ -108,7 +139,7 @@ own backend, which is the party that verifies it.
 
 Cookie attributes (`apps/auth/lib/config.ts`): `HttpOnly`, `SameSite=Lax`, `Path=/`,
 `Secure` in production, 8-hour expiry. `Path=/` on the shared parent domain is what
-lets `/customer360`, `/queue` and `/pretopost` reuse a single sign-in, and works
+lets `/customer360`, `/queue` and `/subscription-management` reuse a single sign-in, and works
 across ports in development because cookies ignore ports.
 
 Sign-in and sign-out are **navigations, not fetches**: `/auth/login` and
@@ -136,20 +167,20 @@ reaches a domain service regardless of how that service is configured.
 
 Backends live in a separate repository (Go + Echo) and are never vendored here.
 
-| Service      | Env var              | Called by       | Endpoints                                                                       |
-| ------------ | -------------------- | --------------- | ------------------------------------------------------------------------------- |
-| auth         | `AUTH_API_URL`       | **apps/auth only** | `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/me`                  |
-| customer360  | `CUSTOMER360_API_URL`| apps/customer360 | `GET /v1/session`, `GET /v1/customers`, `GET /v1/customers/:id`, `…/interactions` |
-| queue        | `QUEUE_API_URL`      | apps/queue      | `GET /v1/session`, `GET /v1/queues`, `GET /v1/queues/:id`, `PATCH …/status`, `POST …/tickets/actions` |
-| pretopost    | `PRETOPOST_API_URL`  | apps/pretopost  | `GET /v1/session`, `GET/POST /v1/migrations`, `GET /v1/migrations/:id`, `POST …/decision` |
+| Service                 | Env var               | Called by                    | Endpoints                                                                                             |
+| ----------------------- | --------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| auth                    | `AUTH_API_URL`        | **apps/auth only**           | `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/me`                                           |
+| customer360             | `CUSTOMER360_API_URL` | apps/customer360             | `GET /v1/session`, `GET /v1/customers`, `GET /v1/customers/:id`, `…/interactions`                     |
+| queue                   | `QUEUE_API_URL`       | apps/queue                   | `GET /v1/session`, `GET /v1/queues`, `GET /v1/queues/:id`, `PATCH …/status`, `POST …/tickets/actions` |
+| subscription-management | `PRETOPOST_API_URL`   | apps/subscription-management | `GET /v1/session`, `GET/POST /v1/migrations`, `GET /v1/migrations/:id`, `POST …/decision`             |
 
 Applications publish contracts to each other too, which is the only permitted
 cross-application traffic:
 
-| Contract                   | Published by | Consumed by | Returns                                              |
-| -------------------------- | ------------ | ----------- | ---------------------------------------------------- |
-| `GET /auth/api/session`    | apps/auth    | apps/shell  | `{ authenticated, user: { id, name, email, role } }` |
-| `GET /queue/api/summary`   | apps/queue   | apps/shell  | aggregate counts for the queue information widget     |
+| Contract                 | Published by | Consumed by | Returns                                              |
+| ------------------------ | ------------ | ----------- | ---------------------------------------------------- |
+| `GET /auth/api/session`  | apps/auth    | apps/shell  | `{ authenticated, user: { id, name, email, role } }` |
+| `GET /queue/api/summary` | apps/queue   | apps/shell  | aggregate counts for the queue information widget    |
 
 Form validation is schema-driven with Zod, and the same schema file is imported by
 both the React Hook Form resolver and the BFF route handler, so the browser and the
@@ -205,14 +236,14 @@ component and a `/api/health` probe to make that cheap to add later.
 
 ## Deliberate non-goals
 
-| Temptation                       | Why it is absent                                                            |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| Module Federation                | Not needed for independent deployment; adds a shared runtime nobody asked for. |
-| A `packages/shared` grab bag     | Duplication in three domain apps is cheaper than a wrongly-abstracted boundary. |
-| Global store / event bus         | Server data plus local state covers these workflows.                        |
-| Centralised gateway BFF          | Ownership would drift away from the domains.                                |
-| Login code in more than one app  | `apps/auth` alone holds it; the architecture gate rejects a second issuer.  |
-| Client-side token storage        | `localStorage` is readable by any XSS payload.                              |
+| Temptation                      | Why it is absent                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| Module Federation               | Not needed for independent deployment; adds a shared runtime nobody asked for.  |
+| A `packages/shared` grab bag    | Duplication in three domain apps is cheaper than a wrongly-abstracted boundary. |
+| Global store / event bus        | Server data plus local state covers these workflows.                            |
+| Centralised gateway BFF         | Ownership would drift away from the domains.                                    |
+| Login code in more than one app | `apps/auth` alone holds it; the architecture gate rejects a second issuer.      |
+| Client-side token storage       | `localStorage` is readable by any XSS payload.                                  |
 
 **Auth is a platform service, not a centralized BFF.** The "no centralized BFF" rule
 exists to stop domain data and workflow from leaking upward into a shared layer.
@@ -228,11 +259,11 @@ existing queue summary and session contract. No domain code moves.
 
 ## Commands
 
-| Command                        | Purpose                                             |
-| ------------------------------ | --------------------------------------------------- |
-| `pnpm dev`                     | run all five applications                           |
-| `pnpm dev:auth`                | run one application (also `:shell`, `:customer360`, `:queue`, `:pretopost`) |
-| `pnpm build`                   | build everything through Turborepo                  |
-| `pnpm lint` / `typecheck` / `test` | per-workspace quality tasks                      |
-| `pnpm check:architecture`      | verify the rules in `docs/mfe-prompt/prompt-0.md`   |
-| `pnpm check`                   | architecture + lint + typecheck + test + build      |
+| Command                            | Purpose                                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| `pnpm dev`                         | run all five applications                                                                 |
+| `pnpm dev:auth`                    | run one application (also `:shell`, `:customer360`, `:queue`, `:subscription-management`) |
+| `pnpm build`                       | build everything through Turborepo                                                        |
+| `pnpm lint` / `typecheck` / `test` | per-workspace quality tasks                                                               |
+| `pnpm check:architecture`          | verify the rules in `docs/mfe-prompt/prompt-0.md`                                         |
+| `pnpm check`                       | architecture + lint + typecheck + test + build                                            |

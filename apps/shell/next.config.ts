@@ -17,7 +17,10 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
 ];
 
 const nextConfig: NextConfig = {
@@ -25,8 +28,16 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
   outputFileTracingRoot: workspaceRoot,
-  transpilePackages: ["@repo/ui"],
-  allowedDevOrigins: ["localhost:3001", "localhost:3002", "localhost:3003", "127.0.0.1:3001", "127.0.0.1:3002", "127.0.0.1:3003"],
+  transpilePackages: ["@repo/ui", "@repo/auth"],
+  allowedDevOrigins: [
+    "ucs.xlsmart.local",
+    "localhost:3001",
+    "localhost:3002",
+    "localhost:3003",
+    "127.0.0.1:3001",
+    "127.0.0.1:3002",
+    "127.0.0.1:3003",
+  ],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

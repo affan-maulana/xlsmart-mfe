@@ -11,22 +11,6 @@ import "server-only";
  * Values resolve lazily so one build deploys to any environment.
  */
 
-export type NavigationIcon =
-  | "layout-dashboard"
-  | "users"
-  | "list-checks"
-  | "arrow-left-right";
-
-export interface NavigationItem {
-  id: string;
-  label: string;
-  /** Absolute origin in development, same-origin sub-path behind NGINX. */
-  href: string;
-  /** Path prefix used to decide which item is active. */
-  match: string;
-  icon: NavigationIcon;
-}
-
 /**
  * Browser-facing base URL of the auth application.
  * Development: http://localhost:3004/auth   Production: /auth
@@ -34,15 +18,6 @@ export interface NavigationItem {
  */
 export function authAppUrl(): string {
   return trimSlashes(required("AUTH_APP_URL", process.env.AUTH_APP_URL));
-}
-
-/**
- * Server-to-server address of the auth application's identity contract.
- * Development: http://localhost:3004/auth/api/session
- * Production:  http://auth-app:3004/auth/api/session
- */
-export function authSessionUrl(): string {
-  return required("AUTH_SESSION_URL", process.env.AUTH_SESSION_URL);
 }
 
 /**
@@ -57,43 +32,6 @@ export function shellPublicUrl(path = "/"): string {
 /** Queue application's published summary BFF endpoint. */
 export function queueSummaryUrl(): string {
   return required("QUEUE_SUMMARY_URL", process.env.QUEUE_SUMMARY_URL);
-}
-
-/**
- * Cross-application links. This is the seam a future Module Federation shell
- * would replace with mounted remotes - nothing else about the platform changes.
- */
-export function getNavigation(): NavigationItem[] {
-  return [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      href: "/",
-      match: "/",
-      icon: "layout-dashboard",
-    },
-    {
-      id: "customer360",
-      label: "Customer360",
-      href: required("CUSTOMER360_URL", process.env.CUSTOMER360_URL),
-      match: "/customer360",
-      icon: "users",
-    },
-    {
-      id: "queue",
-      label: "Queue",
-      href: required("QUEUE_URL", process.env.QUEUE_URL),
-      match: "/queue",
-      icon: "list-checks",
-    },
-    {
-      id: "pretopost",
-      label: "PreToPost",
-      href: required("PRETOPOST_URL", process.env.PRETOPOST_URL),
-      match: "/pretopost",
-      icon: "arrow-left-right",
-    },
-  ];
 }
 
 /** Where an unauthenticated visitor is sent, asked to come back here after. */

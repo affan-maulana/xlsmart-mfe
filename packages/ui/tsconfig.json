@@ -4,9 +4,14 @@
     "jsx": "react-jsx",
     "types": ["node"],
     "paths": {
-      "@repo/ui": ["./src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.ts", "test/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vitest.config.ts",
+    "test/**/*.ts"
+  ],
   "exclude": ["node_modules", "coverage"]
 }

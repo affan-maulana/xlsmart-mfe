@@ -19,8 +19,10 @@ backend code, mocks or schema definitions into this monorepo.
 1. **No Module Federation.** No `@module-federation/*`, no `remoteEntry`, no
    runtime composition. Design for it (own `basePath`, own BFF, own deployable),
    do not implement it.
-2. **No cross-application imports.** `apps/*` may import only its own files and
-   `@repo/ui`. Applications are `private` and expose no package entry points.
+2. **No cross-application imports.** `apps/*` may import only its own files,
+   `@repo/ui` (presentational primitives) and `@repo/auth` (session contract,
+   navigation metadata, auth helpers). Applications are `private` and expose
+   no package entry points.
 3. **No JWT in the browser.** HttpOnly cookie only. Never place a token in
    `localStorage`, `sessionStorage`, `window`, a store, or a Client Component.
    Convert it to `Authorization: Bearer <jwt>` on the server.
@@ -29,10 +31,14 @@ backend code, mocks or schema definitions into this monorepo.
 5. **No centralized BFF.** Each domain owns its BFF (its own Next server:
    Server Component data access + `app/api/*` route handlers) and calls only its
    own backend.
-6. **No premature shared packages.** `packages/ui` is the only shared package.
-   Do not create `packages/shared`, `network`, `api`, `utils`, `config`, or
-   `core` without a proven requirement. Build first, extract later — duplicated
-   domain code is cheaper than a wrong boundary.
+6. **Shared packages stay minimal.** Exactly two are authorised:
+   `packages/ui` (presentational primitives) and `packages/auth` (the session
+   contract with `getSession`/`requireSession`, navigation metadata with
+   `getNavigation`, and the shared staff metadata mapper). Do not create
+   `packages/shared`, `network`, `api`, `utils`, `config`, or `core` without a
+   proven requirement. Build first, extract later — duplicated domain code is
+   cheaper than a wrong boundary. Never put UI components in `packages/auth`;
+   it holds types, contracts, mappers and server-side helpers only.
 7. **Shared UI stays presentational.** Button, PageHeader, Modal, DataTable,
    StatusBadge are fine. `CustomerTable`, `QueueCard`, `PrepaidForm` are not:
    business components stay in their domain. Domain status → tone mapping lives
@@ -52,20 +58,20 @@ backend code, mocks or schema definitions into this monorepo.
 
 ## Domain ownership
 
-| App          | Owns                                                                     |
-| ------------ | ------------------------------------------------------------------------ |
-| auth         | sign-in, sign-out, the session cookie, `GET /auth/api/session`           |
-| shell        | global layout, nav, sidebar, header, user info, queue info widget        |
-| customer360  | customer search, profile, interactions, customer data                    |
-| queue        | queue lifecycle, status, rules, tickets, `GET /queue/api/summary`        |
-| pretopost    | prepaid/postpaid migration and conversion workflows                      |
+| App                     | Owns                                                              |
+| ----------------------- | ----------------------------------------------------------------- |
+| auth                    | sign-in, sign-out, the session cookie, `GET /auth/api/session`    |
+| shell                   | global layout, nav, sidebar, header, user info, queue info widget |
+| customer360             | customer search, profile, interactions, customer data             |
+| queue                   | queue lifecycle, status, rules, tickets, `GET /queue/api/summary` |
+| subscription-management | prepaid/postpaid migration and conversion workflows               |
 
 The shell may read the Queue **summary contract** over HTTP
 (`QUEUE_SUMMARY_URL`) and the auth **session contract** (`AUTH_SESSION_URL`). It
 may never own queue workflow, rules, or actions, and may not hold credentials.
 
-Ports: auth 3004 · shell 3000 · customer360 3001 · queue 3002 · pretopost 3003.
-Sub-path basePaths: `/auth`, `/customer360`, `/queue`, `/pretopost`; the shell is
+Ports: auth 3004 · shell 3000 · customer360 3001 · queue 3002 · subscription-management 3003.
+Sub-path basePaths: `/auth`, `/customer360`, `/queue`, `/subscription-management`; the shell is
 mounted at `/`.
 
 ## Working here

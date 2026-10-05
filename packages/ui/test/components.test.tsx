@@ -2,10 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { Button } from "../src/components/button";
-import { StatusBadge } from "../src/components/status-badge";
-import { DataTable, type DataTableColumn } from "../src/components/data-table";
-import { Modal } from "../src/components/modal";
+import { Button } from "../src/old_components/button";
+import { StatusBadge } from "../src/old_components/status-badge";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "../src/old_components/data-table";
+import { Modal } from "../src/old_components/modal";
 import { cn } from "../src/lib/utils";
 
 interface Row {
@@ -53,16 +56,22 @@ describe("StatusBadge", () => {
   });
 
   it("hides the state dot when disabled", () => {
-    const { container } = render(<StatusBadge tone="success" label="Done" dot={false} />);
+    const { container } = render(
+      <StatusBadge tone="success" label="Done" dot={false} />,
+    );
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
   });
 });
 
 describe("DataTable", () => {
   it("renders one row per record", () => {
-    render(<DataTable columns={columns} rows={rows} rowKey={(row) => row.id} />);
+    render(
+      <DataTable columns={columns} rows={rows} rowKey={(row) => row.id} />,
+    );
 
-    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Name" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(3); // header + 2 rows
     expect(screen.getByText("Beta")).toBeInTheDocument();
   });
@@ -82,10 +91,18 @@ describe("DataTable", () => {
 
   it("shows skeletons while loading", () => {
     const { container } = render(
-      <DataTable columns={columns} rows={[]} rowKey={(row) => row.id} isLoading skeletonRows={2} />,
+      <DataTable
+        columns={columns}
+        rows={[]}
+        rowKey={(row) => row.id}
+        isLoading
+        skeletonRows={2}
+      />,
     );
 
-    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(4); // 2 rows x 2 cols
+    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(
+      4,
+    ); // 2 rows x 2 cols
     expect(screen.queryAllByRole("row")).toHaveLength(3);
   });
 
@@ -111,13 +128,19 @@ describe("DataTable", () => {
 describe("Modal", () => {
   it("opens from its trigger and closes on escape", async () => {
     render(
-      <Modal title="Create ticket" trigger={<Button>New ticket</Button>} description="Details">
+      <Modal
+        title="Create ticket"
+        trigger={<Button>New ticket</Button>}
+        description="Details"
+      >
         <p>Form body</p>
       </Modal>,
     );
 
     await userEvent.click(screen.getByRole("button", { name: "New ticket" }));
-    expect(screen.getByRole("dialog", { name: "Create ticket" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Create ticket" }),
+    ).toBeInTheDocument();
 
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();

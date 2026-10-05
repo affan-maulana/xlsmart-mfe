@@ -16,17 +16,22 @@
     "clean": "rm -rf .turbo node_modules dist coverage"
   },
   "dependencies": {
+    "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-avatar": "catalog:",
+    "@radix-ui/react-checkbox": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
     "@radix-ui/react-dropdown-menu": "catalog:",
     "@radix-ui/react-label": "catalog:",
+    "@radix-ui/react-select": "catalog:",
     "@radix-ui/react-separator": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
+    "@repo/auth": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
-    "tailwind-merge": "catalog:"
+    "tailwind-merge": "catalog:",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:",
@@ -44,6 +49,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "next": "catalog:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

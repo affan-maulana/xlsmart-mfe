@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { ArrowRightIcon, ClockIcon, ListChecksIcon, Users } from "lucide-react";
-import Link from "next/link";
 
+import { getNavigation, getSession } from "@repo/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from "@repo/ui";
 
-import { getIdentity } from "@/lib/auth/session";
-import { getNavigation } from "@/lib/config";
 import { fetchQueueSummary } from "@/lib/queue/summary";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -24,7 +22,7 @@ const domains = [
     icon: ListChecksIcon,
   },
   {
-    id: "pretopost",
+    id: "subscription-management",
     title: "PreToPost",
     description: "Move prepaid customers onto postpaid plans.",
     icon: ArrowRightIcon,
@@ -36,10 +34,14 @@ const domains = [
  * render any of their screens.
  */
 export default async function DashboardPage() {
-  const [identity, queueSummary] = await Promise.all([getIdentity(), fetchQueueSummary()]);
-  const user = identity.status === "authenticated" ? identity.user : null;
+  const [session, queueSummary, navigation] = await Promise.all([
+    getSession(),
+    fetchQueueSummary(),
+    getNavigation(),
+  ]);
+  const user = session.status === "authenticated" ? session.user : null;
 
-  const hrefById = new Map(getNavigation().map((item) => [item.id, item.href]));
+  const hrefById = new Map(navigation.map((item) => [item.id, item.href]));
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -88,14 +90,14 @@ export default async function DashboardPage() {
                 <CardDescription>{domain.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link
+                <a
                   href={href}
                   className="text-primary inline-flex items-center gap-1 text-sm font-medium"
                 >
                   Open {domain.title}
                   <ArrowRightIcon className="size-4" />
                   <span className="sr-only"> (opens in the {domain.title} application)</span>
-                </Link>
+                </a>
               </CardContent>
             </Card>
           );

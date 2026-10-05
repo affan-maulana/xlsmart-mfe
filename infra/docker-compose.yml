@@ -55,7 +55,7 @@ services:
       QUEUE_SUMMARY_URL: http://queue:3002/queue/api/summary
       CUSTOMER360_URL: /customer360
       QUEUE_URL: /queue
-      PRETOPOST_URL: /pretopost
+      SUBSCRIPTION_MANAGEMENT_URL: /subscription-management
     ports:
       - "3000:3000"
     depends_on:
@@ -102,17 +102,17 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  pretopost:
+  subscription-management:
     build:
       context: ..
-      dockerfile: apps/pretopost/Dockerfile
-    image: meteor/pretopost:local
+      dockerfile: apps/subscription-management/Dockerfile
+    image: meteor/subscription-management:local
     environment:
       NODE_ENV: production
       AUTH_APP_URL: /auth
       PUBLIC_APP_URL: http://localhost:8080
       SHELL_URL: ""
-      PRETOPOST_API_URL: http://host.docker.internal:8083
+      SUBSCRIPTION_MANAGEMENT_API_URL: http://host.docker.internal:8083
     ports:
       - "3003:3003"
     depends_on:
@@ -127,7 +127,7 @@ services:
       - shell
       - customer360
       - queue
-      - pretopost
+      - subscription-management
     ports:
       - "8080:80"
     volumes:

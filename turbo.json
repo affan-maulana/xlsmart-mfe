@@ -19,11 +19,11 @@
         "PUBLIC_APP_URL",
         "CUSTOMER360_API_URL",
         "QUEUE_API_URL",
-        "PRETOPOST_API_URL",
+        "SUBSCRIPTION_MANAGEMENT_API_URL",
         "QUEUE_SUMMARY_URL",
         "CUSTOMER360_URL",
         "QUEUE_URL",
-        "PRETOPOST_URL"
+        "SUBSCRIPTION_MANAGEMENT_URL"
       ]
     },
     "lint": {

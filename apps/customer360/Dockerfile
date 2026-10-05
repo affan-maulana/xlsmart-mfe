@@ -15,11 +15,12 @@ WORKDIR /repo
 FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
 COPY packages/ui/package.json ./packages/ui/
+COPY packages/auth/package.json ./packages/auth/
 COPY apps/auth/package.json ./apps/auth/
 COPY apps/shell/package.json ./apps/shell/
 COPY apps/customer360/package.json ./apps/customer360/
 COPY apps/queue/package.json ./apps/queue/
-COPY apps/pretopost/package.json ./apps/pretopost/
+COPY apps/subscription-management/package.json ./apps/subscription-management/
 RUN pnpm install --frozen-lockfile
 
 # ---- build ----------------------------------------------------------------

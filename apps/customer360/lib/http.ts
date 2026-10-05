@@ -1,8 +1,7 @@
 import "server-only";
 
 import { apiUrl } from "./config";
-import { DEV_BYPASS_TOKEN, devBypassEnabled } from "./dev-bypass";
-import { getAccessToken } from "./auth/session";
+import { DEV_BYPASS_TOKEN, devBypassEnabled, getSessionToken } from "@repo/auth";
 
 /**
  * The server-side half of this application's BFF.
@@ -44,7 +43,7 @@ export async function bffFetch<T>({
   searchParams,
   signal,
 }: BffRequest): Promise<T> {
-  const token = await getAccessToken() ?? (devBypassEnabled() ? DEV_BYPASS_TOKEN : null);
+  const token = await getSessionToken() ?? (devBypassEnabled() ? DEV_BYPASS_TOKEN : null);
 
   // Refuse to proxy anonymously. Without this the request would reach the
   // domain service with no credentials at all, and safety would depend entirely
